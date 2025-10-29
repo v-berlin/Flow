@@ -1,0 +1,53 @@
+# Home Assistant Files
+.HA_VERSION
+.uuid
+.storage/
+.cloud/
+deps/
+tts/
+www/
+*.db
+*.db-shm
+*.db-wal
+*.log
+*.conf
+.google.token
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Secrets
+secrets.yaml
+*.key
+*.pem
+
+# Temporary Files
+*.backup
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Editor Files
+.vscode/
+.idea/
+*.sublime-*
+
+# Home Assistant specific
+home-assistant.log
+home-assistant_v2.db
+OZW_Log.txt
+ip_bans.yaml
+
+# Package Manager
+node_modules/
+package-lock.json
