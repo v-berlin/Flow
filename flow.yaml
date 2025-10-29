@@ -1,0 +1,211 @@
+# ============================================
+# FLOW PRODUCTIVITY TRACKER
+# Simplified and optimized configuration
+# ============================================
+
+# INPUT NUMBERS
+input_number:
+  flow_daily_goal:
+    name: "Tägliches Ziel (Minuten)"
+    min: 0
+    max: 1440
+    step: 5
+    unit_of_measurement: "min"
+    icon: mdi:target
+
+  flow_time_tracked_today:
+    name: "Heute getrackte Zeit"
+    min: 0
+    max: 1440
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:clock-check
+
+  flow_streak_counter:
+    name: "Streak Tage"
+    min: 0
+    max: 9999
+    step: 1
+    icon: mdi:fire
+
+# INPUT BOOLEANS
+input_boolean:
+  flow_timer_active:
+    name: "Timer Aktiv"
+    icon: mdi:play-pause
+
+  flow_sick_mode:
+    name: "Krankheitsmodus"
+    icon: mdi:hospital-box
+
+  flow_cat_work:
+    name: "Work"
+    icon: mdi:domain
+
+  flow_cat_privat:
+    name: "Privat"
+    icon: mdi:home
+
+  flow_cat_coding:
+    name: "Coding"
+    icon: mdi:code-braces
+
+  flow_cat_design:
+    name: "Design"
+    icon: mdi:palette
+
+  flow_cat_engineering:
+    name: "Engineering"
+    icon: mdi:cog
+
+# INPUT DATETIME
+input_datetime:
+  flow_timer_start:
+    name: "Timer Startzeit"
+    has_date: true
+    has_time: true
+
+  flow_last_reset:
+    name: "Letzter Reset"
+    has_date: true
+    has_time: true
+
+# INPUT TEXT
+input_text:
+  flow_active_category:
+    name: "Aktive Kategorie"
+    initial: "Keine"
+    max: 20
+
+  flow_history_data:
+    name: "Historie Daten"
+    max: 255
+    initial: "{}"
+
+# TEMPLATE SENSORS
+template:
+  - sensor:
+      # Fortschritt in Prozent
+      - name: "Flow Goal Progress"
+        unique_id: flow_goal_progress
+        state: >
+          {% set goal = states('input_number.flow_daily_goal') | float(0) %}
+          {% set tracked = states('input_number.flow_time_tracked_today') | float(0) %}
+          {% if goal > 0 %}
+            {{ ((tracked / goal) * 100) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+        unit_of_measurement: "%"
+        icon: mdi:percent-circle
+        attributes:
+          tracked_minutes: "{{ states('input_number.flow_time_tracked_today') | int }}"
+          goal_minutes: "{{ states('input_number.flow_daily_goal') | int }}"
+          remaining_minutes: >
+            {% set diff = states('input_number.flow_daily_goal') | int - states('input_number.flow_time_tracked_today') | int %}
+            {{ diff if diff > 0 else 0 }}
+          time_formatted: >
+            {% set minutes = states('input_number.flow_time_tracked_today') | int %}
+            {% set hours = minutes // 60 %}
+            {% set mins = minutes % 60 %}
+            {{ "%d:%02d" | format(hours, mins) }}
+          goal_formatted: >
+            {% set minutes = states('input_number.flow_daily_goal') | int %}
+            {% set hours = minutes // 60 %}
+            {% set mins = minutes % 60 %}
+            {{ "%d:%02d" | format(hours, mins) }}
+      
+      # Status Text mit Kategorie
+      - name: "Flow Status"
+        unique_id: flow_status
+        state: >
+          {% set category = states('input_text.flow_active_category') %}
+          {% set progress = states('sensor.flow_goal_progress') | float(0) %}
+          {% if states('input_boolean.flow_timer_active') == 'on' %}
+            🔴 {{ category }} läuft...
+          {% elif states('input_boolean.flow_sick_mode') == 'on' %}
+            🏥 Krankheitsmodus
+          {% elif progress >= 100 %}
+            ✅ Ziel erreicht!
+          {% elif category != 'Keine' %}
+            {{ category }} - {{ progress | round(0) }}%
+          {% else %}
+            Bereit zum Starten 🚀
+          {% endif %}
+        icon: >
+          {% if states('input_boolean.flow_timer_active') == 'on' %}
+            mdi:record-circle
+          {% else %}
+            mdi:information-outline
+          {% endif %}
+
+      # Zeigt aktive Kategorie nur wenn Timer läuft
+      - name: "Flow Active Work"
+        unique_id: flow_active_work
+        state: >
+          {% if states('input_boolean.flow_timer_active') == 'on' %}
+            {{ states('input_text.flow_active_category') }}
+          {% else %}
+            Inaktiv
+          {% endif %}
+        icon: >
+          {% if states('input_boolean.flow_timer_active') == 'on' %}
+            {% set cat = states('input_text.flow_active_category') %}
+            {% if cat == 'Work' %}
+              mdi:domain
+            {% elif cat == 'Privat' %}
+              mdi:home
+            {% elif cat == 'Coding' %}
+              mdi:code-braces
+            {% elif cat == 'Design' %}
+              mdi:palette
+            {% elif cat == 'Engineering' %}
+              mdi:cog
+            {% else %}
+              mdi:help-circle
+            {% endif %}
+          {% else %}
+            mdi:pause-circle
+          {% endif %}
+      
+      # Timer Elapsed Time
+      - name: "Flow Timer Elapsed"
+        unique_id: flow_timer_elapsed
+        state: >
+          {% if states('input_boolean.flow_timer_active') == 'on' %}
+            {% set start = states('input_datetime.flow_timer_start') | as_datetime %}
+            {% if start %}
+              {% set elapsed = (now() - start).total_seconds() / 60 %}
+              {{ elapsed | round(0) }}
+            {% else %}
+              0
+            {% endif %}
+          {% else %}
+            0
+          {% endif %}
+        unit_of_measurement: "min"
+        icon: mdi:timer
+        attributes:
+          formatted: >
+            {% set minutes = states('sensor.flow_timer_elapsed') | int %}
+            {% set hours = minutes // 60 %}
+            {% set mins = minutes % 60 %}
+            {{ "%d:%02d" | format(hours, mins) }}
+
+      # Zeit bis zum Ziel
+      - name: "Flow Time to Goal"
+        unique_id: flow_time_to_goal
+        state: >
+          {% set remaining = states('input_number.flow_daily_goal') | int - states('input_number.flow_time_tracked_today') | int %}
+          {% if remaining <= 0 %}
+            Erreicht!
+          {% else %}
+            {% set hours = remaining // 60 %}
+            {% set mins = remaining % 60 %}
+            {{ "%d:%02d" | format(hours, mins) }}
+          {% endif %}
+        icon: mdi:target
+        attributes:
+          minutes_remaining: >
+            {% set diff = states('input_number.flow_daily_goal') | int - states('input_number.flow_time_tracked_today') | int %}
+            {{ diff if diff > 0 else 0 }}
