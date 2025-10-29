@@ -1,0 +1,194 @@
+# ============================================
+# FLOW AUTOMATIONS - REFERENCE
+# ============================================
+# This file is for REFERENCE ONLY
+# For Docker users: Create these automations through the Web UI
+# Settings > Automations & Scenes > Create Automation
+
+# AUTOMATION 1: Timer Start/Stop Handler
+- id: flow_timer_toggle_handler
+  alias: "Flow: Timer Toggle Handler"
+  description: "Starts or stops the productivity timer"
+  trigger:
+    - platform: state
+      entity_id: input_boolean.flow_timer_active
+      from: "off"
+      to: "on"
+      id: timer_start
+    - platform: state
+      entity_id: input_boolean.flow_timer_active
+      from: "on"
+      to: "off"
+      id: timer_stop
+  condition: []
+  action:
+    - choose:
+        # When timer starts
+        - conditions:
+            - condition: trigger
+              id: timer_start
+          sequence:
+            - service: input_datetime.set_datetime
+              target:
+                entity_id: input_datetime.flow_timer_start
+              data:
+                datetime: "{{ now() }}"
+            - service: persistent_notification.create
+              data:
+                title: "⏱️ Timer Started"
+                message: "Category: {{ states('input_text.flow_active_category') }}"
+        # When timer stops
+        - conditions:
+            - condition: trigger
+              id: timer_stop
+          sequence:
+            - variables:
+                start_time: "{{ states('input_datetime.flow_timer_start') }}"
+                elapsed_minutes: "{{ ((as_timestamp(now()) - as_timestamp(start_time)) / 60) | int }}"
+                current_total: "{{ states('input_number.flow_time_tracked_today') | int }}"
+                new_total: "{{ [current_total + elapsed_minutes, 1440] | min }}"
+            - service: input_number.set_value
+              target:
+                entity_id: input_number.flow_time_tracked_today
+              data:
+                value: "{{ new_total }}"
+            - service: persistent_notification.create
+              data:
+                title: "⏹️ Timer Stopped"
+                message: "{{ elapsed_minutes }} minutes tracked. Total today: {{ new_total }} min"
+  mode: single
+
+# AUTOMATION 2: Category Selection (Only One Active)
+- id: flow_category_selection
+  alias: "Flow: Category Selection"
+  description: "Ensures only one category can be active at a time"
+  trigger:
+    - platform: state
+      entity_id:
+        - input_boolean.flow_cat_work
+        - input_boolean.flow_cat_personal
+        - input_boolean.flow_cat_coding
+        - input_boolean.flow_cat_design
+        - input_boolean.flow_cat_other
+      to: "on"
+  condition: []
+  action:
+    - variables:
+        triggered_entity: "{{ trigger.entity_id }}"
+        category_map:
+          input_boolean.flow_cat_work: Work
+          input_boolean.flow_cat_personal: Personal
+          input_boolean.flow_cat_coding: Coding
+          input_boolean.flow_cat_design: Design
+          input_boolean.flow_cat_other: Other
+        selected_category: "{{ category_map[triggered_entity] }}"
+    - service: input_text.set_value
+      target:
+        entity_id: input_text.flow_active_category
+      data:
+        value: "{{ selected_category }}"
+    - service: input_boolean.turn_off
+      target:
+        entity_id: >
+          {% set entities = [
+            'input_boolean.flow_cat_work',
+            'input_boolean.flow_cat_personal',
+            'input_boolean.flow_cat_coding',
+            'input_boolean.flow_cat_design',
+            'input_boolean.flow_cat_other'
+          ] %}
+          {{ entities | reject('eq', triggered_entity) | list }}
+  mode: single
+
+# AUTOMATION 3: Daily Reset with Streak Logic
+- id: flow_daily_reset
+  alias: "Flow: Daily Reset"
+  description: "Resets daily counters at midnight and manages streak"
+  trigger:
+    - platform: time
+      at: "00:00:00"
+  condition: []
+  action:
+    - variables:
+        goal_reached: "{{ states('sensor.flow_goal_progress') | float(0) >= 100 }}"
+        sick_mode: "{{ states('input_boolean.flow_sick_mode') == 'on' }}"
+    - choose:
+        # Sick mode: Keep streak
+        - conditions:
+            - condition: template
+              value_template: "{{ sick_mode }}"
+          sequence:
+            - service: persistent_notification.create
+              data:
+                title: "🏥 Sick Day"
+                message: "Streak maintained at {{ states('input_number.flow_streak_counter') }} days"
+        # Goal reached: Increment streak
+        - conditions:
+            - condition: template
+              value_template: "{{ goal_reached }}"
+          sequence:
+            - service: input_number.increment
+              target:
+                entity_id: input_number.flow_streak_counter
+            - service: persistent_notification.create
+              data:
+                title: "🔥 Streak!"
+                message: "{{ states('input_number.flow_streak_counter') }} days in a row!"
+      # Default: Reset streak
+      default:
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.flow_streak_counter
+          data:
+            value: 0
+        - service: persistent_notification.create
+          data:
+            title: "💔 Streak Lost"
+            message: "Starting fresh today!"
+    # Reset daily counters
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.flow_time_tracked_today
+      data:
+        value: 0
+    - service: input_boolean.turn_off
+      target:
+        entity_id:
+          - input_boolean.flow_sick_mode
+          - input_boolean.flow_timer_active
+          - input_boolean.flow_cat_work
+          - input_boolean.flow_cat_personal
+          - input_boolean.flow_cat_coding
+          - input_boolean.flow_cat_design
+          - input_boolean.flow_cat_other
+    - service: input_text.set_value
+      target:
+        entity_id: input_text.flow_active_category
+      data:
+        value: "None"
+  mode: single
+
+# AUTOMATION 4: Goal Reached Notification
+- id: flow_goal_reached_notification
+  alias: "Flow: Goal Reached Notification"
+  description: "Notifies when daily goal is reached"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.flow_goal_progress
+      above: 99.9
+  condition:
+    - condition: state
+      entity_id: input_boolean.flow_sick_mode
+      state: "off"
+    - condition: template
+      value_template: >
+        {{ (now() - this.attributes.last_triggered | default(as_datetime(0))) > timedelta(hours=20) }}
+  action:
+    - service: persistent_notification.create
+      data:
+        title: "🎉 Daily Goal Reached!"
+        message: >
+          Congratulations! You reached your goal!
+          Tracked: {{ states('input_number.flow_time_tracked_today') }} minutes
+          Streak: {{ states('input_number.flow_streak_counter') }} days
+  mode: single
