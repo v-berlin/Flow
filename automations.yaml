@@ -1,14 +1,14 @@
 - id: d9872d0607fe426f9b999f3691acdfa2
-  alias: Motive - Timer Toggle Handler
+  alias: Flow - Timer Toggle Handler
   description: Startet oder stoppt den Timer
   trigger:
   - platform: state
-    entity_id: input_boolean.motive_timer_active
+    entity_id: input_boolean.flow_timer_active
     from: 'off'
     to: 'on'
     id: timer_start
   - platform: state
-    entity_id: input_boolean.motive_timer_active
+    entity_id: input_boolean.flow_timer_active
     from: 'on'
     to: 'off'
     id: timer_stop
@@ -21,27 +21,19 @@
       sequence:
       - service: input_datetime.set_datetime
         target:
-          entity_id: input_datetime.motive_timer_start
+          entity_id: input_datetime.flow_timer_start
         data:
           datetime: '{{ now() }}'
-      - service: timer.start
-        target:
-          entity_id: timer.motive_work_timer
-        data:
-          duration: 08:00:00
       - service: persistent_notification.create
         data:
           title: ⏱️ Timer gestartet
-          message: 'Kategorie: {{ states(''input_text.motive_active_category'') }}'
+          message: 'Kategorie: {{ states(''input_text.flow_active_category'') }}'
     - conditions:
       - condition: trigger
         id: timer_stop
       sequence:
-      - service: timer.cancel
-        target:
-          entity_id: timer.motive_work_timer
       - variables:
-          start_time: '{{ states(''input_datetime.motive_timer_start'') }}'
+          start_time: '{{ states(''input_datetime.flow_timer_start'') }}'
       - choose:
         - conditions:
           - condition: template
@@ -52,12 +44,12 @@
               elapsed_seconds: '{{ (as_timestamp(now()) - as_timestamp(start_time))
                 | int }}'
               elapsed_minutes: '{{ (elapsed_seconds / 60) | int }}'
-              current_total: '{{ states(''input_number.motive_time_tracked_today'')
+              current_total: '{{ states(''input_number.flow_time_tracked_today'')
                 | int }}'
               new_total: '{{ [current_total + elapsed_minutes, 1440] | min }}'
           - service: input_number.set_value
             target:
-              entity_id: input_number.motive_time_tracked_today
+              entity_id: input_number.flow_time_tracked_today
             data:
               value: '{{ new_total }}'
           - service: persistent_notification.create
@@ -70,42 +62,42 @@
                 '
   mode: single
 - id: b80cb47ec90a47b8919584669b1f2d46
-  alias: Motive - Kategorie Selection
+  alias: Flow - Kategorie Selection
   description: Nur eine Kategorie kann aktiv sein
   trigger:
   - platform: state
     entity_id:
-    - input_boolean.motive_cat_work
-    - input_boolean.motive_cat_privat
-    - input_boolean.motive_cat_coding
-    - input_boolean.motive_cat_design
-    - input_boolean.motive_cat_engineering
+    - input_boolean.flow_cat_work
+    - input_boolean.flow_cat_privat
+    - input_boolean.flow_cat_coding
+    - input_boolean.flow_cat_design
+    - input_boolean.flow_cat_engineering
     to: 'on'
   condition: []
   action:
   - variables:
       triggered_entity: '{{ trigger.entity_id }}'
       category_map:
-        input_boolean.motive_cat_work: Work
-        input_boolean.motive_cat_privat: Privat
-        input_boolean.motive_cat_coding: Coding
-        input_boolean.motive_cat_design: Design
-        input_boolean.motive_cat_engineering: Engineering
+        input_boolean.flow_cat_work: Work
+        input_boolean.flow_cat_privat: Privat
+        input_boolean.flow_cat_coding: Coding
+        input_boolean.flow_cat_design: Design
+        input_boolean.flow_cat_engineering: Engineering
       selected_category: '{{ category_map[triggered_entity] }}'
   - service: input_text.set_value
     target:
-      entity_id: input_text.motive_active_category
+      entity_id: input_text.flow_active_category
     data:
       value: '{{ selected_category }}'
   - service: input_boolean.turn_off
     target:
-      entity_id: "{% set entities = [\n  'input_boolean.motive_cat_work',\n  'input_boolean.motive_cat_privat',
-        \n  'input_boolean.motive_cat_coding',\n  'input_boolean.motive_cat_design',\n
-        \ 'input_boolean.motive_cat_engineering'\n] %} {{ entities | reject('eq',
+      entity_id: "{% set entities = [\n  'input_boolean.flow_cat_work',\n  'input_boolean.flow_cat_privat',
+        \n  'input_boolean.flow_cat_coding',\n  'input_boolean.flow_cat_design',\n
+        \ 'input_boolean.flow_cat_engineering'\n] %} {{ entities | reject('eq',
         triggered_entity) | list }}\n"
   mode: single
 - id: 43ac83b7ca764df298d90fafc9e6c212
-  alias: Motive - Daily Reset
+  alias: Flow - Daily Reset
   description: Reset um Mitternacht mit Streak Logic
   trigger:
   - platform: time
@@ -113,17 +105,17 @@
   condition: []
   action:
   - variables:
-      goal_reached: '{{ states(''sensor.motive_goal_progress'') | float(0) >= 100
+      goal_reached: '{{ states(''sensor.flow_goal_progress'') | float(0) >= 100
         }}'
-      sick_mode: '{{ states(''input_boolean.motive_sick_mode'') == ''on'' }}'
+      sick_mode: '{{ states(''input_boolean.flow_sick_mode'') == ''on'' }}'
       yesterday: '{{ (now() - timedelta(days=1)).strftime(''%Y-%m-%d'') }}'
-      progress: '{{ states(''sensor.motive_goal_progress'') | float(0) }}'
-      minutes: '{{ states(''input_number.motive_time_tracked_today'') | int }}'
+      progress: '{{ states(''sensor.flow_goal_progress'') | float(0) }}'
+      minutes: '{{ states(''input_number.flow_time_tracked_today'') | int }}'
   - service: input_text.set_value
     target:
-      entity_id: input_text.motive_history_data
+      entity_id: input_text.flow_history_data
     data:
-      value: "{% set history = states('input_text.motive_history_data') %} {% if history
+      value: "{% set history = states('input_text.flow_history_data') %} {% if history
         in ['unknown', 'unavailable', '', '{}'] %}\n  {% set history = '{}' %}\n{%
         endif %} {% set data = history | from_json %} {% set _ = data.update({\n  yesterday:
         {\n    'percent': progress | round(1),\n    'minutes': minutes,\n    'sick':
@@ -138,7 +130,7 @@
       - service: persistent_notification.create
         data:
           title: "\U0001F3E5 Krankheitstag"
-          message: Streak bleibt bei {{ states('input_number.motive_streak_counter')
+          message: Streak bleibt bei {{ states('input_number.flow_streak_counter')
             }} Tagen
     - conditions:
       - condition: template
@@ -146,15 +138,15 @@
       sequence:
       - service: input_number.increment
         target:
-          entity_id: input_number.motive_streak_counter
+          entity_id: input_number.flow_streak_counter
       - service: persistent_notification.create
         data:
           title: "\U0001F525 Streak!"
-          message: '{{ states(''input_number.motive_streak_counter'') }} Tage in Folge!'
+          message: '{{ states(''input_number.flow_streak_counter'') }} Tage in Folge!'
     default:
     - service: input_number.set_value
       target:
-        entity_id: input_number.motive_streak_counter
+        entity_id: input_number.flow_streak_counter
       data:
         value: 0
     - service: persistent_notification.create
@@ -163,58 +155,44 @@
         message: Neuer Start heute!
   - service: input_number.set_value
     target:
-      entity_id: input_number.motive_time_tracked_today
+      entity_id: input_number.flow_time_tracked_today
     data:
       value: 0
   - service: input_boolean.turn_off
     target:
-      entity_id: input_boolean.motive_sick_mode
+      entity_id: input_boolean.flow_sick_mode
   - service: input_text.set_value
     target:
-      entity_id: input_text.motive_active_category
+      entity_id: input_text.flow_active_category
     data:
       value: Keine
   - service: input_boolean.turn_off
     target:
       entity_id:
-      - input_boolean.motive_cat_bega
-      - input_boolean.motive_cat_privat
-      - input_boolean.motive_cat_coding
-      - input_boolean.motive_cat_design
-      - input_boolean.motive_cat_engineering
+      - input_boolean.flow_cat_work
+      - input_boolean.flow_cat_privat
+      - input_boolean.flow_cat_coding
+      - input_boolean.flow_cat_design
+      - input_boolean.flow_cat_engineering
   - service: input_boolean.turn_off
     target:
-      entity_id: input_boolean.motive_timer_active
+      entity_id: input_boolean.flow_timer_active
   - service: input_datetime.set_datetime
     target:
-      entity_id: input_datetime.motive_last_reset
+      entity_id: input_datetime.flow_last_reset
     data:
       datetime: '{{ now() }}'
   mode: single
-- id: 897a07fd75a74783a18164b261ba3d88
-  alias: Motive - Save Daily Achievement
-  description: Speichert Tagesfortschritt für Heatmap
-  trigger:
-  - platform: time
-    at: '23:59:00'
-  condition: []
-  action:
-  - service: input_number.set_value
-    target:
-      entity_id: input_number.motive_daily_achievement
-    data:
-      value: '{{ states(''sensor.motive_goal_progress'') | float(0) }}'
-  mode: single
 - id: bd4a3f2ab8e94c4e883caf4837aea542
-  alias: Motive - Goal Reached Notification
+  alias: Flow - Goal Reached Notification
   description: Benachrichtigung wenn 100% erreicht
   trigger:
   - platform: numeric_state
-    entity_id: sensor.motive_goal_progress
+    entity_id: sensor.flow_goal_progress
     above: 99.9
   condition:
   - condition: state
-    entity_id: input_boolean.motive_sick_mode
+    entity_id: input_boolean.flow_sick_mode
     state: 'off'
   - condition: template
     value_template: '{{ (now() - this.attributes.last_triggered | default(as_datetime(0)))
@@ -227,9 +205,9 @@
       title: "\U0001F389 Tagesziel erreicht!"
       message: 'Glückwunsch! Du hast dein Ziel erreicht!
 
-        Getrackt: {{ states(''input_number.motive_time_tracked_today'') }} Minuten
+        Getrackt: {{ states(''input_number.flow_time_tracked_today'') }} Minuten
 
-        Streak: {{ states(''input_number.motive_streak_counter'') }} Tage
+        Streak: {{ states(''input_number.flow_streak_counter'') }} Tage
 
         '
   mode: single
