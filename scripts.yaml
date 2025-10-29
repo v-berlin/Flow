@@ -1,61 +1,61 @@
-# Motive - Increase Goal
-motive_increase_goal:
-  alias: "Motive - Increase Goal"
+# Flow - Increase Goal
+flow_increase_goal:
+  alias: "Flow - Increase Goal"
   mode: single
   sequence:
     - service: input_number.set_value
       target:
-        entity_id: input_number.motive_daily_goal
+        entity_id: input_number.flow_daily_goal
       data:
-        value: "{{ [states('input_number.motive_daily_goal') | int + 5, 1440] | min }}"
+        value: "{{ [states('input_number.flow_daily_goal') | int + 5, 1440] | min }}"
 
-# Motive - Decrease Goal
-motive_decrease_goal:
-  alias: "Motive - Decrease Goal"
+# Flow - Decrease Goal
+flow_decrease_goal:
+  alias: "Flow - Decrease Goal"
   mode: single
   sequence:
     - service: input_number.set_value
       target:
-        entity_id: input_number.motive_daily_goal
+        entity_id: input_number.flow_daily_goal
       data:
-        value: "{{ [states('input_number.motive_daily_goal') | int - 5, 0] | max }}"
+        value: "{{ [states('input_number.flow_daily_goal') | int - 5, 0] | max }}"
 
-# Motive - Reset Day
-motive_reset_day:
-  alias: "Motive - Reset Day"
+# Flow - Reset Day
+flow_reset_day:
+  alias: "Flow - Reset Day"
   mode: single
   sequence:
     - service: input_number.set_value
       target:
-        entity_id: input_number.motive_time_tracked_today
+        entity_id: input_number.flow_time_tracked_today
       data:
         value: 0
     - service: input_boolean.turn_off
       target:
         entity_id:
-          - input_boolean.motive_timer_active
-          - input_boolean.motive_cat_work
-          - input_boolean.motive_cat_privat
-          - input_boolean.motive_cat_coding
-          - input_boolean.motive_cat_design
-          - input_boolean.motive_cat_engineering
+          - input_boolean.flow_timer_active
+          - input_boolean.flow_cat_work
+          - input_boolean.flow_cat_personal
+          - input_boolean.flow_cat_coding
+          - input_boolean.flow_cat_design
+          - input_boolean.flow_cat_engineering
     - service: input_text.set_value
       target:
-        entity_id: input_text.motive_active_category
+        entity_id: input_text.flow_active_category
       data:
-        value: "Keine"
+        value: "None"
     - service: persistent_notification.create
       data:
         title: "🔄 Reset"
-        message: "Tag wurde zurückgesetzt"
+        message: "Day has been reset"
 
-# Motive - Manual Add Time (Optional - fügt manuell Zeit hinzu)
-motive_add_time:
-  alias: "Motive - Add Time Manually"
+# Flow - Manual Add Time
+flow_add_time:
+  alias: "Flow - Add Time Manually"
   mode: single
   fields:
     minutes:
-      description: "Minuten die hinzugefügt werden sollen"
+      description: "Minutes to add"
       example: 30
       required: true
       selector:
@@ -65,33 +65,10 @@ motive_add_time:
   sequence:
     - service: input_number.set_value
       target:
-        entity_id: input_number.motive_time_tracked_today
+        entity_id: input_number.flow_time_tracked_today
       data:
-        value: "{{ [states('input_number.motive_time_tracked_today') | int + minutes, 1440] | min }}"
+        value: "{{ [states('input_number.flow_time_tracked_today') | int + minutes, 1440] | min }}"
     - service: persistent_notification.create
       data:
-        title: "➕ Zeit hinzugefügt"
-        message: "{{ minutes }} Minuten wurden manuell hinzugefügt"
-
-# Motive - Test Timer (Optional - für Tests)
-motive_test_timer:
-  alias: "Motive - Test Timer"
-  mode: single
-  sequence:
-    - service: input_datetime.set_datetime
-      target:
-        entity_id: input_datetime.motive_timer_start
-      data:
-        datetime: "{{ now() - timedelta(minutes=5) }}"
-    - delay:
-        seconds: 1
-    - variables:
-        start: "{{ states('input_datetime.motive_timer_start') }}"
-        elapsed: "{{ ((as_timestamp(now()) - as_timestamp(start)) / 60) | int }}"
-    - service: persistent_notification.create
-      data:
-        title: "⚡ Test Info"
-        message: |
-          Start: {{ start }}
-          Vergangen: {{ elapsed }} Minuten
-          Aktuell getrackt: {{ states('input_number.motive_time_tracked_today') }} min
+        title: "➕ Time Added"
+        message: "{{ minutes }} minutes were manually added"
