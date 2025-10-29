@@ -6,7 +6,7 @@ This guide helps you migrate from the old "Motive" system to the new streamlined
 
 ### Summary of Changes
 - **Project Name**: Motive → Flow
-- **Entities**: 24 → 17 (29% reduction)
+- **Entities**: 26 → 17 (35% reduction)
 - **Automations**: 5 → 4 (more efficient)
 - **Scripts**: 6 → 4 (simplified)
 - **Code Quality**: Improved readability and maintainability
@@ -47,8 +47,8 @@ This is the easiest approach and gives you a fresh start.
 
 2. **Remove Old Motive Configuration**
    - In File Editor, delete `packages/motive.yaml`
-   - In `automations.yaml`, remove all Motive automations (look for IDs starting with the old IDs)
-   - In `scripts.yaml`, remove all Motive scripts
+   - In `automations.yaml`, remove all Motive automations (search for "Motive" in the alias or entity names containing "motive_")
+   - In `scripts.yaml`, remove all Motive scripts (script names starting with "motive_")
 
 3. **Install Flow**
    - Follow the [Installation Guide](README.md#installation) in the README
