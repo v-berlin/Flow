@@ -157,7 +157,7 @@ Turn OFF all toggles (timer, sick mode, categories)
     ↓
 Reset active_category to "None"
     ↓
-Ready for new day!
+Ready for a new day!
 ```
 
 ### 4. Reaching Daily Goal
@@ -174,8 +174,6 @@ Goal Reached Notification Automation triggers
 Check: Not in sick mode + Last trigger > 20h ago
     ↓
 Send "🎉 Daily Goal Reached!" notification
-    ↓
-User celebrates! 🎉
 ```
 
 ---

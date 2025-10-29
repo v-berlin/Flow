@@ -24,7 +24,7 @@
 | `motive_daily_goal` | `flow_daily_goal` | ✅ Kept | Renamed |
 | `motive_time_tracked_today` | `flow_time_tracked_today` | ✅ Kept | Renamed |
 | `motive_streak_counter` | `flow_streak_counter` | ✅ Kept | Renamed |
-| `motive_daily_achievement` | - | ❌ Removed | Calculated on-the-fly |
+| `motive_daily_achievement` | - | ❌ Removed | Calculated on the fly |
 | `motive_session_minutes` | - | ❌ Removed | Not used |
 
 **Result: 5 → 3 entities** (40% reduction)
@@ -38,7 +38,7 @@
 | `motive_timer_active` | `flow_timer_active` | ✅ Kept | Renamed |
 | `motive_sick_mode` | `flow_sick_mode` | ✅ Kept | Renamed |
 | `motive_cat_work` | `flow_cat_work` | ✅ Kept | Renamed |
-| `motive_cat_privat` | `flow_cat_personal` | ✅ Kept | Renamed to English |
+| `motive_cat_personal` | `flow_cat_personal` | ✅ Kept | Renamed to English |
 | `motive_cat_coding` | `flow_cat_coding` | ✅ Kept | Renamed |
 | `motive_cat_design` | `flow_cat_design` | ✅ Kept | Renamed |
 | `motive_cat_engineering` | `flow_cat_other` | ✅ Kept | Renamed, more generic |
@@ -147,7 +147,7 @@
 - Complex history data JSON manipulation
 - Stores 365 days of history
 - ~50 lines of template logic
-- Bug in entity list (motive_cat_bega typo)
+- Bug in entity list (typo in category name)
 ```
 
 **Flow (Simple):**
