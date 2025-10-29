@@ -342,8 +342,8 @@ action:
             id: timer_stop
         sequence:
           - variables:
-              start_time: "{{ states('input_datetime.flow_timer_start') }}"
-              elapsed_minutes: "{{ ((as_timestamp(now()) - as_timestamp(start_time)) / 60) | int }}"
+              start_time: "{{ state_attr('input_datetime.flow_timer_start', 'timestamp') }}"
+              elapsed_minutes: "{{ ((as_timestamp(now()) - start_time) / 60) | int }}"
               current_total: "{{ states('input_number.flow_time_tracked_today') | int }}"
               new_total: "{{ [current_total + elapsed_minutes, 1440] | min }}"
           - service: input_number.set_value
@@ -391,11 +391,7 @@ action:
         input_boolean.flow_cat_design: Design
         input_boolean.flow_cat_other: Other
       selected_category: "{{ category_map[triggered_entity] }}"
-  - service: input_text.set_value
-    target:
-      entity_id: input_text.flow_active_category
-    data:
-      value: "{{ selected_category }}"
+  # First, turn off all other categories
   - service: input_boolean.turn_off
     target:
       entity_id: >
@@ -407,7 +403,18 @@ action:
           'input_boolean.flow_cat_other'
         ] %}
         {{ entities | reject('eq', triggered_entity) | list }}
-mode: single
+  # Then ensure the selected category is ON (in case it was toggled off)
+  - service: input_boolean.turn_on
+    target:
+      entity_id: "{{ triggered_entity }}"
+  # Finally, update the active category text
+  - service: input_text.set_value
+    target:
+      entity_id: input_text.flow_active_category
+    data:
+      value: "{{ selected_category }}"
+mode: queued
+max: 5
 ```
 
 4. Click **SAVE**
