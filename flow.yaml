@@ -167,6 +167,16 @@ template:
           {% else %}
             mdi:pause-circle
           {% endif %}
+        attributes:
+          timer_running: "{{ states('input_boolean.flow_timer_active') }}"
+          category: "{{ states('input_text.flow_active_category') }}"
+          elapsed_minutes: "{{ states('sensor.flow_timer_elapsed') }}"
+          started_at: >
+            {% if states('input_boolean.flow_timer_active') == 'on' %}
+              {{ states('input_datetime.flow_timer_start') }}
+            {% else %}
+              Nicht aktiv
+            {% endif %}
       
       # Timer Elapsed Time
       - name: "Flow Timer Elapsed"
@@ -191,6 +201,7 @@ template:
             {% set hours = minutes // 60 %}
             {% set mins = minutes % 60 %}
             {{ "%d:%02d" | format(hours, mins) }}
+          start_time: "{{ states('input_datetime.flow_timer_start') }}"
 
       # Zeit bis zum Ziel
       - name: "Flow Time to Goal"
