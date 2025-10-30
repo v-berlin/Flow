@@ -548,6 +548,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Home Assistant Community
 - [**@v-berlin**](https://github.com/v-berlin/) for the original concept
+- [**@apfelFunker**](https://github.com/apfelFunker) for the more advanced version of my concept("Flow" is built on "Motive" by apfelFunker which is built on my original concept)
 - All contributors and users
 
 ---
