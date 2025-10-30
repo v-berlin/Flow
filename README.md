@@ -14,11 +14,10 @@ A streamlined productivity tracking system for Home Assistant that turns time in
 </div>
 
 ---
-```warning
-The README.md and the comments in the code are generatet by AI. Errors may be present.
-If you find one feel free to create an Issue with the Tag "Readme".
-Thanks for your cooperation
-```
+> [!WARNING] 
+> ⚠️ The README.md and the comments in the code are generatet by AI. Errors may be present.
+> If you find one feel free to create an Issue with the Tag "Readme".
+> Thanks for your cooperation
 
 ## 📋 Table of Contents
 
