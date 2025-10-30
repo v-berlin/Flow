@@ -231,6 +231,7 @@
 
         '
   mode: single
+
 - id: ffd3f3e2b1b14c1fa5e2e4e2b6f4c8d3
   alias: Flow Timer Tick
   description: "Aktualisiert den Tick-Helfer alle 5 Sekunden, damit Template-Sensor häufiger gerendert wird"
