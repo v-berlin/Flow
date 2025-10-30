@@ -24,7 +24,7 @@ flow_tracker:
     flow_streak_counter:
       name: "Streak Tage"
       min: 0
-      max: 9999
+      max: 40000000000
       step: 1
       icon: mdi:fire
 
@@ -32,7 +32,7 @@ flow_tracker:
       name: Flow Timer Tick
       initial: 0
       min: 0
-      max: 4000000000
+      max: 999999999
       step: 1
 
   # INPUT BOOLEANS
