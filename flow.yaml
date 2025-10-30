@@ -227,10 +227,9 @@ flow_tracker:
             {% else %}
               {% set hours = remaining // 60 %}
               {% set mins = remaining % 60 %}
-              {{ "%d:%02d" | format(hours, mins) }}
+              {{ "%d:%02d Stunden" | format(hours, mins) }}
             {% endif %}
           icon: mdi:target
-          unit_of_measurement: "Stunden"
           attributes:
             minutes_remaining: >
               {% set diff = states('input_number.flow_daily_goal') | int - states('input_number.flow_time_tracked_today') | int %}
