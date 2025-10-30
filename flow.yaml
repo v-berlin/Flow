@@ -32,7 +32,7 @@ flow_tracker:
       name: Flow Timer Tick
       initial: 0
       min: 0
-      max: 999999999
+      max: 4000000000
       step: 1
 
   # INPUT BOOLEANS
