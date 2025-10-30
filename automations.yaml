@@ -24,6 +24,26 @@
           entity_id: input_datetime.flow_timer_start
         data:
           datetime: '{{ now() }}'
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{{ states('input_text.flow_active_category') in ['Keine', '', 'unknown', 'unavailable'] }}"
+          sequence:
+          - service: input_text.set_value
+            target:
+              entity_id: input_text.flow_active_category
+            data:
+              value: 'Work'
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.flow_cat_work
+          - service: input_boolean.turn_off
+            target:
+              entity_id:
+              - input_boolean.flow_cat_privat
+              - input_boolean.flow_cat_coding
+              - input_boolean.flow_cat_design
+              - input_boolean.flow_cat_engineering
       - service: persistent_notification.create
         data:
           title: ⏱️ Timer gestartet
