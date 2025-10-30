@@ -1601,7 +1601,7 @@ When you're sick or unable to work:
 
 ### Example 2: Sick Day Management
 
-**Scenario:** You're sick on day 15 of a 14-day streak.
+**Scenario:** You're sick after completing a 14-day streak.
 
 **Workflow:**
 ```
