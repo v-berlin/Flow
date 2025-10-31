@@ -146,10 +146,10 @@
           'minutes': minutes,
           'sick': sick_mode
         } %}
-        {% set _ = data.update({yesterday: yesterday_data}) %}
+        {% set data = dict(data, **{yesterday: yesterday_data}) %}
         {% set keys = data.keys() | list | sort %}
         {% if keys | length > 365 %}
-          {% set _ = data.pop(keys[0]) %}
+          {% set data = dict((k, v) for k, v in data.items() if k != keys[0]) %}
         {% endif %}
         {{ data | to_json }}
   - choose:
