@@ -1,6 +1,64 @@
 # Changelog
 
-## 31. Oktober 2025 - Fix für Daily Reset Automation
+## 31. Oktober 2025 - Fix für Jinja2 Generator Expression Syntax Error
+
+### Problem
+Die vorherige Lösung für die Daily Reset Automation enthielt einen Jinja2-Syntaxfehler:
+```
+Error: template value should be a string for dictionary value @ data['actions'][1]['data']
+```
+
+Der folgende Code funktioniert in Python, aber nicht in Jinja2:
+```jinja2
+{% set data = dict((k, v) for k, v in data.items() if k != keys[0]) %}
+```
+
+### Ursache
+Jinja2 unterstützt keine Generator-Expressions direkt im `dict()` Constructor wie Python es tut. Der obige Code verursacht einen Parsing-Fehler: "expected token ',', got 'for'".
+
+### Lösung
+Die Generator-Expression wurde durch Jinja2's native Filter-Syntax ersetzt:
+
+**Vorher (fehlerhaft):**
+```jinja2
+{% set data = dict((k, v) for k, v in data.items() if k != keys[0]) %}
+```
+
+**Nachher (korrekt):**
+```jinja2
+{% set oldest_key = keys[0] %}
+{% set data = dict(data.items() | rejectattr('0', 'equalto', oldest_key) | list) %}
+```
+
+### Technische Details
+- `rejectattr('0', 'equalto', oldest_key)` ist Jinja2's Filter um Einträge zu filtern
+- Der Filter `rejectattr` arbeitet auf Tupeln aus `data.items()` und verwirft das Tupel, dessen erstes Element (`'0'`) dem `oldest_key` entspricht
+- Das Ergebnis wird in eine Liste umgewandelt und dann in ein Dictionary konvertiert
+- Diese Syntax ist vollständig Jinja2-kompatibel und funktioniert in Home Assistant's sandboxed environment
+
+### Was du tun musst
+
+1. **Lade die geänderte `automations.yaml` Datei in dein Home Assistant hoch**
+   - Entweder über File Editor oder über SSH/FTP
+   - Pfad: `/config/automations.yaml` (oder wo auch immer deine Automations gespeichert sind)
+
+2. **Lade die Automationen neu**
+   - Gehe zu: Einstellungen → Automationen & Szenen
+   - Klicke oben rechts auf die drei Punkte (⋮)
+   - Wähle "Konfiguration neu laden" → "Automationen"
+   - Oder verwende den Service: `automation.reload`
+
+3. **Optional: Teste die Automation manuell**
+   - Gehe zu: Einstellungen → Automationen & Szenen
+   - Suche "Flow - Daily Reset"
+   - Klicke auf die drei Punkte (⋮) → "Ausführen"
+   - Prüfe, ob die Automation ohne Fehler durchläuft
+
+Die Automation sollte jetzt ohne Fehler laufen! 🎉
+
+---
+
+## 31. Oktober 2025 - Fix für Daily Reset Automation (Vorheriger Fix)
 
 ### Problem
 Die Automation "Flow - Daily Reset" hat beim Ausführen folgenden Fehler verursacht:
