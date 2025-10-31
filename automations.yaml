@@ -135,13 +135,23 @@
     target:
       entity_id: input_text.flow_history_data
     data:
-      value: "{% set history = states('input_text.flow_history_data') %} {% if history
-        in ['unknown', 'unavailable', '', '{}'] %}\n  {% set history = '{}' %}\n{%
-        endif %} {% set data = history | from_json %} {% set _ = data.update({\n  yesterday:
-        {\n    'percent': progress | round(1),\n    'minutes': minutes,\n    'sick':
-        sick_mode\n  }\n}) %} {% set keys = data.keys() | list | sort %} {% if keys
-        | length > 365 %}\n  {% set _ = data.pop(keys[0]) %}\n{% endif %} {{ data
-        | to_json }}\n"
+      value: >
+        {% set history = states('input_text.flow_history_data') %}
+        {% if history in ['unknown', 'unavailable', '', '{}'] %}
+          {% set history = '{}' %}
+        {% endif %}
+        {% set data = history | from_json %}
+        {% set yesterday_data = {
+          'percent': progress | round(1),
+          'minutes': minutes,
+          'sick': sick_mode
+        } %}
+        {% set _ = data.update({yesterday: yesterday_data}) %}
+        {% set keys = data.keys() | list | sort %}
+        {% if keys | length > 365 %}
+          {% set _ = data.pop(keys[0]) %}
+        {% endif %}
+        {{ data | to_json }}
   - choose:
     - conditions:
       - condition: template
