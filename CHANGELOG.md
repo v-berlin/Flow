@@ -78,11 +78,13 @@ Die unsicheren Dictionary-Operationen wurden durch sichere Alternativen ersetzt:
 {% set _ = data.pop(keys[0]) %}
 ```
 
-**Nachher (sicher):**
+**Nachher (sicher, aber enthielt noch Jinja2-Syntax-Fehler - siehe Fix vom 31. Oktober 2025 oben):**
 ```yaml
 {% set data = dict(data, **{yesterday: yesterday_data}) %}
-{% set data = dict((k, v) for k, v in data.items() if k != keys[0]) %}
+{% set data = dict((k, v) for k, v in data.items() if k != keys[0]) %}  # ⚠️ Dieser Code funktioniert nicht in Jinja2!
 ```
+
+**Hinweis:** Dieser Fix hat zwar das Security-Problem gelöst, aber einen Jinja2-Syntax-Fehler eingeführt. Die endgültige Lösung steht im neuesten Changelog-Eintrag oben.
 
 ### Was du tun musst
 
