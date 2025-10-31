@@ -135,7 +135,7 @@
     target:
       entity_id: input_text.flow_history_data
     data:
-      value: >
+      value: >-
         {% set history = states('input_text.flow_history_data') %}
         {% if history in ['unknown', 'unavailable', '', '{}'] %}
           {% set history = '{}' %}
@@ -149,7 +149,8 @@
         {% set data = dict(data, **{yesterday: yesterday_data}) %}
         {% set keys = data.keys() | list | sort %}
         {% if keys | length > 365 %}
-          {% set data = dict((k, v) for k, v in data.items() if k != keys[0]) %}
+          {% set oldest_key = keys[0] %}
+          {% set data = dict(data.items() | rejectattr('0', 'equalto', oldest_key) | list) %}
         {% endif %}
         {{ data | to_json }}
   - choose:
