@@ -64,14 +64,12 @@ flow_add_time:
           max: 480
           mode: box
   sequence:
-    - variables:
-        add_minutes: "{{ minutes | int(0) }}"
     - service: input_number.set_value
       target:
         entity_id: input_number.flow_time_tracked_today
       data:
-        value: "{{ [states('input_number.flow_time_tracked_today') | int + add_minutes, 1440] | min }}"
+        value: "{{ [states('input_number.flow_time_tracked_today') | int + (minutes | int(0)), 1440] | min }}"
     - service: persistent_notification.create
       data:
         title: "➕ Zeit hinzugefügt"
-        message: "{{ add_minutes }} Minuten wurden manuell hinzugefügt"
+        message: "{{ minutes | int(0) }} Minuten wurden manuell hinzugefügt"
