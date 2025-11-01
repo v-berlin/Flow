@@ -68,8 +68,8 @@ flow_add_time:
       target:
         entity_id: input_number.flow_time_tracked_today
       data:
-        value: "{{ [states('input_number.flow_time_tracked_today') | int + (minutes | int(0)), 1440] | min }}"
+        value: "{{ [states('input_number.flow_time_tracked_today') | int + (minutes | default(0) | int), 1440] | min }}"
     - service: persistent_notification.create
       data:
         title: "➕ Zeit hinzugefügt"
-        message: "{{ minutes | int(0) }} Minuten wurden manuell hinzugefügt"
+        message: "{{ minutes | default(0) | int }} Minuten wurden manuell hinzugefügt"
